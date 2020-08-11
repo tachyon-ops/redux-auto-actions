@@ -1,44 +1,180 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# REDUX-AUTO-ACTIONS
 
-## Available Scripts
+<!-- STORY -->
 
-In the project directory, you can run:
+<hr>
 
-### `yarn start`
+A component for triggering a user action. e.g: a submit button in a form
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Import
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+```js
+import { StoreModule } from 'react-auto-actions';
+```
 
-### `yarn test`
+## Usage
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. First create `app-actions.ts`
 
-### `yarn build`
+```ts
+export interface AppState {
+  counter: number;
+}
+export enum AppStateLabel {
+  STATE = 'app',
+}
+export const appS = new StoreModule<ActionType, AppState>(AppStateLabel.STATE, { counter: 0 });
+export const AppInitialState = appS.initialState;
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+export enum ActionType {
+  INCREMENT = 'INCREMENT',
+  DECREMENT = 'DECREMENT',
+  RESET = 'RESET',
+}
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+/**
+ * Exportable Actions
+ */
+const { action: increment, type: incrementType } = appS.setPayloadAction<number>(
+  ActionType.INCREMENT,
+  (amount) => amount,
+  (state, action) => ({ ...state, counter: state.counter + action.payload })
+);
+const { action: decrement, type: decrementType } = appS.setPayloadAction<number>(
+  ActionType.DECREMENT,
+  (amount) => -amount,
+  (state, action) => ({ ...state, counter: state.counter + action.payload })
+);
+const { action: reset, type: resetType } = appS.setSimpleAction(ActionType.RESET, () => appS.initialState);
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+type AllAppActions = typeof incrementType | typeof decrementType | typeof resetType;
 
-### `yarn eject`
+/**
+ * Thunks
+ */
+type AppThunks<R> = ThunkAction<R, GlobalState, null, AllAppActions>;
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+type TestAyncThunk = (amount: number) => AppThunks<boolean>;
+const testAsync: TestAyncThunk = (amount) => (dispatch) => {
+  setTimeout(() => dispatch(increment(amount)), 1000);
+  return true;
+};
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+export const actions = {
+  increment,
+  decrement,
+  reset,
+  testAsync,
+};
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+/**
+ * Reducer
+ */
+export const AppReducer = appS.getReducer();
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+/**
+ * Exportable Selectors
+ */
+function counter(state: GlobalState) {
+  return appS.helper(state).counter;
+}
+export const selectors = {
+  counter,
+};
+```
 
-## Learn More
+2. Now setup store `store.ts`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```ts
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+import { AppState, AppStateLabel, AppInitialState, AppReducer } from './app.actions';
+
+export interface GlobalState {
+  [AppStateLabel.STATE]: AppState;
+}
+const defaultState: GlobalState = {
+  [AppStateLabel.STATE]: AppInitialState,
+};
+
+const combinedReducers = combineReducers({
+  [AppStateLabel.STATE]: AppReducer,
+});
+
+export const store = createStore(combinedReducers, defaultState, applyMiddleware(thunk));
+```
+
+3. Once you connect your store to the app, by means of setting up the `Provider`
+
+```ts
+<Provider store={store}>
+  <App />
+</Provider>
+```
+
+4. You can create your `App.tsx`
+
+```tsx
+import React from 'react';
+import { connect, ConnectedProps } from 'react-redux';
+
+import { GlobalState } from './store';
+import { selectors, actions } from './store/app.actions';
+import { AppButton } from './components/Button';
+import './App.css';
+
+const connector = connect(
+  (state: GlobalState) => ({
+    counter: selectors.counter(state),
+  }),
+  {
+    increment: actions.increment,
+    decrement: actions.decrement,
+    reset: actions.reset,
+    testAsync: actions.testAsync,
+  }
+);
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+interface OwnArgs {}
+interface Props extends PropsFromRedux, OwnArgs {}
+
+const AppRaw: React.FC<Props> = ({ counter, increment, decrement, reset, testAsync }) => (
+  <div className="App">
+    <header className="App-header">
+      <h4>{counter}</h4>
+      <br />
+      <AppButton label="Increment" onClick={() => increment(1)} />
+      <AppButton label="Decrement" onClick={() => decrement(1)} />
+      {/* <AppButton label="Increment 5" onClick={incrementFive} /> */}
+      <AppButton label="Reset" onClick={() => reset()} />
+      <AppButton label="TestAsync" onClick={() => testAsync(10)} />
+    </header>
+  </div>
+);
+export const App = connector(AppRaw);
+```
+
+Have fun!
+
+### Help with work
+
+Just fork and do a PR :) I will add you to the colaborators list with a BIG thank you!
+
+- If you want to buy me a coffee or a beer as a thank you, I'm very much appreciated :stuck_out_tongue_winking_eye: [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=D3J2WXTXLAWK8&source=url)
+
+### Guidelines
+
+Whenever a new `master` is deployed, it should be tagged with the new deployed version.
+After we reach version 1.0.0 as the first release (production ready). After that, we follow semantic versioning.
+
+### Publishing
+
+Remember to always publish on a merge request. Pipeline `master:only` actions will be created in the future, once we stabilize this library.
+
+Enjoy!
+
+## Troubleshooting
+
+- Create an issue
