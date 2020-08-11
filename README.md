@@ -9,7 +9,7 @@ A component for triggering a user action. e.g: a submit button in a form
 ## Import
 
 ```js
-import { StoreModule } from 'react-auto-actions';
+import { StoreModule } from 'redux-auto-actions';
 ```
 
 ## Usage
