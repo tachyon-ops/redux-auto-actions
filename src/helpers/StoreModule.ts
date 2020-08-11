@@ -4,13 +4,18 @@ import { PayloadAction, SimpleAction } from '../index';
 
 export class StoreModule<ActionType extends string, S extends {}> {
   path: string;
+
   initialState: S;
+
   reducers: {
-    [key in ActionType]?: <A extends PayloadAction<ActionType, unknown> | SimpleAction<ActionType>>(
+    [key in ActionType]?: <
+      A extends PayloadAction<ActionType, unknown> | SimpleAction<ActionType>
+    >(
       state: S,
       action: A
     ) => S;
   } = {};
+
   selectors: { [key in ActionType]?: (state: S) => any[] } = {};
 
   constructor(path: string, initialState: S) {
@@ -30,19 +35,24 @@ export class StoreModule<ActionType extends string, S extends {}> {
     };
   }
 
-  setSimpleAction(type: ActionType, tinyReducer: (state: S, action: SimpleAction<ActionType> | AnyAction) => S) {
+  setSimpleAction(
+    type: ActionType,
+    tinyReducer: (state: S, action: SimpleAction<ActionType> | AnyAction) => S
+  ) {
     this.reducers[type] = tinyReducer;
     return { type: { type }, action: () => ({ type }) };
   }
 
   getReducer() {
-    return <A extends PayloadAction<ActionType, any> | SimpleAction<ActionType>>(
+    return <
+      A extends PayloadAction<ActionType, any> | SimpleAction<ActionType>
+    >(
       state: S = this.initialState,
       action: A
     ) => {
       const thisReducer = this.reducers[action.type];
       if (thisReducer) return thisReducer(state, action);
-      else return state;
+      return state;
     };
   }
 
