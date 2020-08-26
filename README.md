@@ -134,7 +134,7 @@ export const store = createStore(
 
 - 4. You can create your `App.tsx`
 
-* redux-auto-actions way:
+- redux-auto-actions way: if you are using our cool Connect helper, which is aimed at removing TypeScript boilerplate around your component construction, you can think of any argument passed to `stateAndDispatch()` as the function signature of `connect()` from `react-redux`.
 
 ```tsx
 import React from 'react';
@@ -145,20 +145,22 @@ import { selectors, actions } from './store/app.actions';
 import { AppButton } from './components/Button';
 import './App.css';
 
-const mapStateToProps = (state: GlobalState) => ({
-  counter: selectors.counter(state),
-});
-const mapDispatchToProps = {
-  increment: actions.increment,
-  decrement: actions.decrement,
-  reset: actions.reset,
-  testAsync: actions.testAsync,
-};
-
 interface AppProps {}
 
-export const App = Connect<GlobalState, AppProps>()
-  .stateAndDispatch(mapStateToProps, mapDispatchToProps)
+export const Counter = Connect<GlobalState, AppProps>()
+  .stateAndDispatch(
+    // you can inject component props into mapStateToProps
+    (state, ownProps) => ({
+      counter: selectors.counter(state),
+    }),
+    // you can inject component props into mapDispatchToProps
+    (dispatch, ownProps) => ({
+      increment: actions.increment,
+      decrement: actions.decrement,
+      reset: actions.reset,
+      testAsync: actions.testAsync,
+    })
+  )
   .withComp(({ counter, increment, decrement, reset, testAsync }) => (
     <div className="App">
       <header className="App-header">
