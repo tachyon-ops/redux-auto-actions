@@ -12,11 +12,11 @@ export function Connect<State, TOwnProps>() {
     mapDispatchToProps: MapDispatchToPropsParam<TDispatchProps, TOwnProps>
   ) {
     const connector = connect(mapStateToProps, mapDispatchToProps);
-    type PropsFromRedux = ConnectedProps<typeof connector>;
+    type Props = ConnectedProps<typeof connector> & TOwnProps;
 
-    function withComp(comp: React.FC<PropsFromRedux & TOwnProps>) {
-      // @ts-ignore
-      return connector(comp);
+    function withComp(comp: React.FC<Props>) {
+      const result = connector(comp as any); // can't figure out this one in due time
+      return result as React.FC<TOwnProps>;
     }
     return { withComp };
   }

@@ -12,7 +12,7 @@ import { StoreModule } from 'redux-auto-actions';
 
 ## Usage
 
-- 1. First create `app-actions.ts`
+### 1 First create `app-actions.ts`
 
 ```ts
 export interface AppState {
@@ -93,7 +93,7 @@ export const selectors = {
 };
 ```
 
-- 2.  Now setup store `store.ts`
+### 2 Now setup store `store.ts`
 
 ```ts
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -124,7 +124,7 @@ export const store = createStore(
 );
 ```
 
-- 3. Once you connect your store to the app, by means of setting up the `Provider`
+### 3 Once you connect your store to the app, by means of setting up the `Provider`
 
 ```ts
 <Provider store={store}>
@@ -132,9 +132,11 @@ export const store = createStore(
 </Provider>
 ```
 
-- 4. You can create your `App.tsx`
+### 4 You can create your `App.tsx`
 
-- redux-auto-actions way: if you are using our cool Connect helper, which is aimed at removing TypeScript boilerplate around your component construction, you can think of any argument passed to `stateAndDispatch()` as the function signature of `connect()` from `react-redux`.
+#### redux-auto-actions way
+
+If you are using our cool Connect helper, which is aimed at removing TypeScript boilerplate around your component construction, you can think of any argument passed to `stateAndDispatch()` as the function signature of `connect()` from `react-redux`. Remember that for more advanced usages (using `mergeParam` or `options`) you will need to use `react-redux` boilerplate. More info in [Redux.js docs - Typing the connect higher order component](https://redux.js.org/recipes/usage-with-typescript/#typing-the-connect-higher-order-component)
 
 ```tsx
 import React from 'react';
@@ -149,17 +151,23 @@ interface AppProps {}
 
 export const Counter = Connect<GlobalState, AppProps>()
   .stateAndDispatch(
-    // you can inject component props into mapStateToProps
+    /**
+     * @implNote you can inject component props into mapStateToProps
+     */
     (state, ownProps) => ({
       counter: selectors.counter(state),
     }),
-    // you can inject component props into mapDispatchToProps
-    (dispatch, ownProps) => ({
+
+    /**
+     * @implNote you can inject component props into mapDispatchToProps
+     * currently the <code>(dispatch, ownProps) => ({})</code> way is not available
+     */
+    {
       increment: actions.increment,
       decrement: actions.decrement,
       reset: actions.reset,
       testAsync: actions.testAsync,
-    })
+    }
   )
   .withComp(({ counter, increment, decrement, reset, testAsync }) => (
     <div className="App">
@@ -175,7 +183,7 @@ export const Counter = Connect<GlobalState, AppProps>()
   ));
 ```
 
-- Traditional way:
+#### Traditional way
 
 ```tsx
 import React from 'react';
