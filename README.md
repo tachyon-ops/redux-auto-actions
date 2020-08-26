@@ -2,9 +2,7 @@
 
 <!-- STORY -->
 
-<hr>
-
-A component for triggering a user action. e.g: a submit button in a form
+This module is aimed at reducing the termendous amount of boilerplate that plagues react-redux flow creations. It follows the Keep It Super Simple philosophy.
 
 ## Import
 
@@ -14,7 +12,7 @@ import { StoreModule } from 'redux-auto-actions';
 
 ## Usage
 
-1. First create `app-actions.ts`
+- 1. First create `app-actions.ts`
 
 ```ts
 export interface AppState {
@@ -23,7 +21,9 @@ export interface AppState {
 export enum AppStateLabel {
   STATE = 'app',
 }
-export const appS = new StoreModule<ActionType, AppState>(AppStateLabel.STATE, { counter: 0 });
+export const appS = new StoreModule<ActionType, AppState>(AppStateLabel.STATE, {
+  counter: 0,
+});
 export const AppInitialState = appS.initialState;
 
 export enum ActionType {
@@ -35,19 +35,29 @@ export enum ActionType {
 /**
  * Exportable Actions
  */
-const { action: increment, type: incrementType } = appS.setPayloadAction<number>(
+const { action: increment, type: incrementType } = appS.setPayloadAction<
+  number
+>(
   ActionType.INCREMENT,
   (amount) => amount,
   (state, action) => ({ ...state, counter: state.counter + action.payload })
 );
-const { action: decrement, type: decrementType } = appS.setPayloadAction<number>(
+const { action: decrement, type: decrementType } = appS.setPayloadAction<
+  number
+>(
   ActionType.DECREMENT,
   (amount) => -amount,
   (state, action) => ({ ...state, counter: state.counter + action.payload })
 );
-const { action: reset, type: resetType } = appS.setSimpleAction(ActionType.RESET, () => appS.initialState);
+const { action: reset, type: resetType } = appS.setSimpleAction(
+  ActionType.RESET,
+  () => appS.initialState
+);
 
-type AllAppActions = typeof incrementType | typeof decrementType | typeof resetType;
+type AllAppActions =
+  | typeof incrementType
+  | typeof decrementType
+  | typeof resetType;
 
 /**
  * Thunks
@@ -83,13 +93,18 @@ export const selectors = {
 };
 ```
 
-2. Now setup store `store.ts`
+- 2.  Now setup store `store.ts`
 
 ```ts
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 
-import { AppState, AppStateLabel, AppInitialState, AppReducer } from './app.actions';
+import {
+  AppState,
+  AppStateLabel,
+  AppInitialState,
+  AppReducer,
+} from './app.actions';
 
 export interface GlobalState {
   [AppStateLabel.STATE]: AppState;
@@ -102,10 +117,14 @@ const combinedReducers = combineReducers({
   [AppStateLabel.STATE]: AppReducer,
 });
 
-export const store = createStore(combinedReducers, defaultState, applyMiddleware(thunk));
+export const store = createStore(
+  combinedReducers,
+  defaultState,
+  applyMiddleware(thunk)
+);
 ```
 
-3. Once you connect your store to the app, by means of setting up the `Provider`
+- 3. Once you connect your store to the app, by means of setting up the `Provider`
 
 ```ts
 <Provider store={store}>
@@ -113,7 +132,48 @@ export const store = createStore(combinedReducers, defaultState, applyMiddleware
 </Provider>
 ```
 
-4. You can create your `App.tsx`
+- 4. You can create your `App.tsx`
+
+* redux-auto-actions way:
+
+```tsx
+import React from 'react';
+import { Connect } from 'redux-auto-actions';
+
+import { GlobalState } from './store';
+import { selectors, actions } from './store/app.actions';
+import { AppButton } from './components/Button';
+import './App.css';
+
+const mapStateToProps = (state: GlobalState) => ({
+  counter: selectors.counter(state),
+});
+const mapDispatchToProps = {
+  increment: actions.increment,
+  decrement: actions.decrement,
+  reset: actions.reset,
+  testAsync: actions.testAsync,
+};
+
+interface AppProps {}
+
+export const App = Connect<GlobalState, AppProps>()
+  .stateAndDispatch(mapStateToProps, mapDispatchToProps)
+  .withComp(({ counter, increment, decrement, reset, testAsync }) => (
+    <div className="App">
+      <header className="App-header">
+        <h4>{counter}</h4>
+        <br />
+        <AppButton label="Increment" onClick={() => increment(1)} />
+        <AppButton label="Decrement" onClick={() => decrement(1)} />
+        <AppButton label="Reset" onClick={() => reset()} />
+        <AppButton label="TestAsync" onClick={() => testAsync(10)} />
+      </header>
+    </div>
+  ));
+```
+
+- Traditional way:
 
 ```tsx
 import React from 'react';
@@ -138,16 +198,21 @@ const connector = connect(
 type PropsFromRedux = ConnectedProps<typeof connector>;
 
 interface OwnArgs {}
-interface Props extends PropsFromRedux, OwnArgs {}
+interface AppProps extends PropsFromRedux, OwnArgs {}
 
-const AppRaw: React.FC<Props> = ({ counter, increment, decrement, reset, testAsync }) => (
+const AppRaw: React.FC<AppProps> = ({
+  counter,
+  increment,
+  decrement,
+  reset,
+  testAsync,
+}) => (
   <div className="App">
     <header className="App-header">
       <h4>{counter}</h4>
       <br />
       <AppButton label="Increment" onClick={() => increment(1)} />
       <AppButton label="Decrement" onClick={() => decrement(1)} />
-      {/* <AppButton label="Increment 5" onClick={incrementFive} /> */}
       <AppButton label="Reset" onClick={() => reset()} />
       <AppButton label="TestAsync" onClick={() => testAsync(10)} />
     </header>

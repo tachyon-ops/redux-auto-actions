@@ -8,6 +8,7 @@ import {
 import { ThunkDispatch } from 'redux-thunk';
 
 import { StoreModule } from './helpers/StoreModule';
+import { Connect } from './helpers/Connect';
 
 export interface GlobalStateBase {
   [key: string]: any;
@@ -30,4 +31,4 @@ export type Reducer<StateI, ActionI extends Action<unknown>> = ReducerFromRedux<
   ActionI
 >;
 
-export { StoreModule };
+export { StoreModule, Connect };
