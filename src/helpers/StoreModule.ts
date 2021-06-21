@@ -56,7 +56,12 @@ export class StoreModule<ActionType extends string, S extends {}> {
     };
   }
 
-  helper(state: {}): S {
-    return (state as { [key: string]: S })[this.path];
+  helper(state: S, separator: string = "."): S {
+    return this.resolve( this.path, state, separator);
   }
+
+  private resolve(path: string, object: S, separator = "."): S {
+    return path.split(separator).reduce((r: Object, val) => (r ? (r as any)[val] : undefined), object) as S;
+  }
+
 }
