@@ -1,6 +1,6 @@
 {
   "name": "redux-auto-actions",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A React redux-thunk library to make your life esier",
   "author": "TachyonVFX, LDA <info@tachyonvfx.com>",
   "keywords": [
@@ -29,7 +29,8 @@
     "lib": "lib"
   },
   "files": [
-    "lib"
+    "lib",
+    "src"
   ],
   "devDependencies": {
     "@testing-library/jest-dom": "^4.2.4",
