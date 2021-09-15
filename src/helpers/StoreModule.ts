@@ -25,14 +25,11 @@ export class StoreModule<ActionType extends string, S extends {}> {
 
   setPayloadAction<P extends any>(
     type: ActionType,
-    logic: (payload: P) => P,
+    logic: (payload: unknown) => P,
     tinyReducer: (state: S, action: PayloadAction<ActionType, P>) => S
   ) {
     this.reducers[type] = tinyReducer as (state: S, action: AnyAction) => S;
-    return {
-      type: { type, payload: (undefined as unknown) as P },
-      action: (payload: P) => ({ type, payload: logic(payload) }),
-    };
+    return (payload: P) => ({ type, payload: logic(payload) });
   }
 
   setSimpleAction(
@@ -40,7 +37,7 @@ export class StoreModule<ActionType extends string, S extends {}> {
     tinyReducer: (state: S, action: SimpleAction<ActionType> | AnyAction) => S
   ) {
     this.reducers[type] = tinyReducer;
-    return { type: { type }, action: () => ({ type }) };
+    return () => ({ type });
   }
 
   getReducer() {
