@@ -6,7 +6,7 @@ import {
   MapDispatchToPropsParam,
 } from 'react-redux';
 
-export function Connect<State, TOwnProps>() {
+export function Connect<State, TOwnProps = unknown>() {
   function stateAndDispatch<TStateProps, TDispatchProps>(
     mapStateToProps: MapStateToPropsParam<TStateProps, TOwnProps, State>,
     mapDispatchToProps: MapDispatchToPropsParam<TDispatchProps, TOwnProps>
