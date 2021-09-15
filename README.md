@@ -93,7 +93,7 @@ export enum ActionType {
 }
 ```
 
-### 2 Now setup store `store.ts`
+### 3 Now setup store `store.ts`
 
 ```ts
 import { createStore, applyMiddleware, Store, Middleware } from 'redux';
@@ -111,7 +111,7 @@ export const appStore: Store = createStore(
 );
 ```
 
-### 3 Once you connect your store to the app, by means of setting up the `Provider`
+### 4 Once you connect your store to the app, by means of setting up the `Provider`
 
 ```ts
 import { Provider } from 'react-redux';
@@ -125,7 +125,7 @@ import { appStore } from './store/store';
 // ...
 ```
 
-### 4 You can create your `App.tsx`
+### 5 You can create your `App.tsx`
 
 #### redux-auto-actions way
 
