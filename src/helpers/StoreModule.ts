@@ -25,11 +25,10 @@ export class StoreModule<ActionType extends string, S extends {}> {
 
   setPayloadAction<P extends any>(
     type: ActionType,
-    logic: (payload: unknown) => P,
     tinyReducer: (state: S, action: PayloadAction<ActionType, P>) => S
   ) {
     this.reducers[type] = tinyReducer as (state: S, action: AnyAction) => S;
-    return (payload: P) => ({ type, payload: logic(payload) });
+    return (payload: P) => ({ type, payload });
   }
 
   setSimpleAction(
