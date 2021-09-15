@@ -15,54 +15,36 @@ import { StoreModule } from 'redux-auto-actions';
 ### 1 First create `app-actions.ts`
 
 ```ts
-export interface AppState {
-  counter: number;
-}
-export enum AppStateLabel {
-  STATE = 'app',
-}
-export const appS = new StoreModule<ActionType, AppState>(AppStateLabel.STATE, {
-  counter: 0,
-});
-export const AppInitialState = appS.initialState;
+import { AnyAction } from 'redux';
+import { ThunkAction } from 'redux-thunk';
 
-export enum ActionType {
-  INCREMENT = 'INCREMENT',
-  DECREMENT = 'DECREMENT',
-  RESET = 'RESET',
-}
+import { GlobalState } from '../state';
+
+import { ActionType, appS } from './app.state';
 
 /**
  * Exportable Actions
  */
-const { action: increment, type: incrementType } = appS.setPayloadAction<
-  number
->(
+const increment = appS.setPayloadAction<number>(
   ActionType.INCREMENT,
-  (amount) => amount,
-  (state, action) => ({ ...state, counter: state.counter + action.payload })
+  (state, action) => ({
+    ...state,
+    counter: state.counter + action.payload,
+  })
 );
-const { action: decrement, type: decrementType } = appS.setPayloadAction<
-  number
->(
+const decrement = appS.setPayloadAction<number>(
   ActionType.DECREMENT,
-  (amount) => -amount,
-  (state, action) => ({ ...state, counter: state.counter + action.payload })
+  (state, action) => ({
+    ...state,
+    counter: state.counter - action.payload,
+  })
 );
-const { action: reset, type: resetType } = appS.setSimpleAction(
-  ActionType.RESET,
-  () => appS.initialState
-);
-
-type AllAppActions =
-  | typeof incrementType
-  | typeof decrementType
-  | typeof resetType;
+const reset = appS.setSimpleAction(ActionType.RESET, () => appS.initialState);
 
 /**
  * Thunks
  */
-type AppThunks<R> = ThunkAction<R, GlobalState, null, AllAppActions>;
+type AppThunks<R> = ThunkAction<R, GlobalState, null, AnyAction>;
 
 type TestAyncThunk = (amount: number) => AppThunks<boolean>;
 const testAsync: TestAyncThunk = (amount) => (dispatch) => {
@@ -85,51 +67,62 @@ export const AppReducer = appS.getReducer();
 /**
  * Exportable Selectors
  */
-function counter(state: GlobalState) {
-  return appS.helper(state).counter;
+export const selectors = appS.helper;
+```
+
+### 2 Now setup `app.state.ts`
+
+```ts
+import { StoreModule } from 'redux-auto-actions';
+
+export interface AppState {
+  counter: number;
 }
-export const selectors = {
-  counter,
-};
+export enum AppStateLabel {
+  STATE = 'app',
+}
+
+export const appS = new StoreModule<ActionType, AppState>(AppStateLabel.STATE, {
+  counter: 0,
+});
+
+export enum ActionType {
+  INCREMENT = 'INCREMENT',
+  DECREMENT = 'DECREMENT',
+  RESET = 'RESET',
+}
 ```
 
 ### 2 Now setup store `store.ts`
 
 ```ts
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, Store, Middleware } from 'redux';
 import thunk from 'redux-thunk';
 
-import {
-  AppState,
-  AppStateLabel,
-  AppInitialState,
-  AppReducer,
-} from './app.actions';
+import { defaultState } from './state';
+import { combinedReducers } from './reducer';
 
-export interface GlobalState {
-  [AppStateLabel.STATE]: AppState;
-}
-const defaultState: GlobalState = {
-  [AppStateLabel.STATE]: AppInitialState,
-};
+const middleware: Middleware[] = [thunk];
 
-const combinedReducers = combineReducers({
-  [AppStateLabel.STATE]: AppReducer,
-});
-
-export const store = createStore(
+export const appStore: Store = createStore(
   combinedReducers,
   defaultState,
-  applyMiddleware(thunk)
+  applyMiddleware(...middleware)
 );
 ```
 
 ### 3 Once you connect your store to the app, by means of setting up the `Provider`
 
 ```ts
+import { Provider } from 'react-redux';
+
+import { appStore } from './store/store';
+
+// ...
 <Provider store={store}>
   <App />
 </Provider>
+// ...
 ```
 
 ### 4 You can create your `App.tsx`
